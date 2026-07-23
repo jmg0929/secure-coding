@@ -387,17 +387,6 @@ h2 { font-size: 1.18rem; }
 .actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 
 /* ---------- 폼 ---------- */
-.form-card {
-  max-width: 452px; margin: 1.2rem auto;
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r-lg); padding: 2.2rem; box-shadow: var(--shadow);
-}
-.form-card.wide { max-width: 640px; }
-.form-card h1 { margin-bottom: 0.4rem; }
-.form-card .subtitle {
-  font-family: var(--font-body);
-  color: var(--muted); font-size: 0.9rem; margin: 0 0 1.7rem;
-}
 .field { margin-bottom: 1.2rem; }
 .field label {
   display: block; margin-bottom: 0.42rem;
@@ -421,8 +410,6 @@ textarea { min-height: 122px; resize: vertical; line-height: 1.7; }
   font-family: var(--font-ui);
   color: var(--danger); font-size: 0.83rem; font-weight: 600;
 }
-.form-card .hint { text-align: center; margin-top: 1.4rem; }
-.form-card .hint a { color: var(--carrot); font-weight: 700; font-family: var(--font-ui); }
 
 /* ---------- 프로필 ---------- */
 .profile-head {
@@ -494,27 +481,6 @@ textarea { min-height: 122px; resize: vertical; line-height: 1.7; }
 }
 .chat-form button:hover { background: var(--carrot-hover); }
 
-/* 목록형 (채팅/거래 공용) */
-.chat-list { list-style: none; padding: 0; margin: 0; }
-.chat-list li {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: var(--r-md); margin-bottom: 0.7rem; transition: all .16s;
-}
-.chat-list li:hover { border-color: var(--carrot-line); box-shadow: var(--shadow); }
-.chat-list a { display: flex; align-items: center; gap: 0.95rem; padding: 1rem 1.25rem; }
-.chat-list .who {
-  font-family: var(--font-ui); font-weight: 700;
-  font-size: 0.95rem; letter-spacing: -0.03em;
-}
-.chat-list .preview {
-  font-family: var(--font-body); color: var(--muted); font-size: 0.86rem;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.chat-list .grow { flex: 1; min-width: 0; }
-.chat-list .when {
-  font-family: var(--font-num); color: var(--muted);
-  font-size: 0.78rem; white-space: nowrap;
-}
 
 /* ---------- 거래 ---------- */
 .notice {
@@ -675,11 +641,6 @@ textarea { min-height: 122px; resize: vertical; line-height: 1.7; }
 }
 .grow { flex: 1; min-width: 0; }
 .grid-top { margin-top: 1.5rem; }
-.admin-h2 {
-  display: flex; align-items: baseline; gap: 0.45rem;
-  margin: 2.2rem 0 0.2rem;
-}
-.admin-h2 .num { color: var(--carrot); }
 .price-lg.big { font-size: 1.95rem; margin: 0.2rem 0 0; }
 .detail-chips { margin-top: 0.7rem; }
 .detail-seller .sub { font-family: var(--font-ui); font-size: 0.79rem; color: var(--muted); }
@@ -745,12 +706,6 @@ textarea { min-height: 122px; resize: vertical; line-height: 1.7; }
 .price-lg .unit {
   font-size: 0.86rem; font-weight: 700; margin-left: 0.1rem; color: var(--text-sub);
 }
-.rating {
-  display: flex; align-items: center; gap: 0.3rem;
-  font-family: var(--font-num); font-size: 0.88rem; font-weight: 700;
-}
-.rating .star { color: var(--carrot); }
-.rating .cnt { color: var(--muted); font-weight: 500; }
 
 /* ---------- 폼 고급화 ---------- */
 .form-page { max-width: 780px; }
@@ -908,7 +863,6 @@ textarea { min-height: 122px; resize: vertical; line-height: 1.7; }
 }
 .empty.compact { padding: 1.9rem 1rem; font-size: 0.9rem; }
 .empty.compact .big { font-size: 1.7rem; margin-bottom: 0.4rem; }
-.admin-h2 .hint { font-weight: 400; }
 
 /* ---------- 관리자 접이식 섹션 ---------- */
 .sec {

@@ -9,7 +9,7 @@
   포함해야 하므로 임의의 방을 훔쳐볼 수 없다.
 - 메시지는 서버에서 이스케이프 후 저장/전송한다.
 """
-from flask import Blueprint, render_template, session, g, abort, redirect, url_for
+from flask import Blueprint, render_template, session, g, abort
 from markupsafe import escape
 from flask_socketio import emit, join_room
 

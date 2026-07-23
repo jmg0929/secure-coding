@@ -3,7 +3,7 @@ import mimetypes
 import os
 
 import click
-from flask import Flask, g, render_template
+from flask import Flask, render_template
 
 # 일부 환경에서 .woff2 MIME 이 등록되어 있지 않아 application/octet-stream 으로
 # 응답된다. nosniff 헤더를 함께 쓰므로 정확한 타입을 명시해 준다.

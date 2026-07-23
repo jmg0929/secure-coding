@@ -1,6 +1,6 @@
 """회원가입 / 로그인 / 로그아웃."""
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, session, g,
+    Blueprint, render_template, redirect, url_for, flash, session, g,
 )
 
 from ..db import get_db

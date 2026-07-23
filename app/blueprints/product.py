@@ -139,7 +139,7 @@ def toggle_status(product_id):
 @bp.route("/<product_id>/report", methods=["POST"])
 @login_required
 def report(product_id):
-    product = _get_product_or_404(product_id)
+    _get_product_or_404(product_id)   # 존재하지 않는 상품에 대한 신고 차단
     form = ReportForm()
     if form.validate_on_submit():
         db = get_db()
