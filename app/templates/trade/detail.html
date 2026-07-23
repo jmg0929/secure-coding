@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}거래 상세 · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill" href="{{ url_for('trade.my_trades') }}">← 내 거래</a>
+  <a class="pill on" href="#">🤝 거래 상세</a>
+{% endblock %}
+{% block content %}
+  {% set st = trade['status'] %}
+  {% set steps = [('requested','구매요청'), ('accepted','판매자 수락'), ('sent','송금완료'), ('confirmed','거래완료')] %}
+  {% set order = {'requested':0, 'accepted':1, 'sent':2, 'confirmed':3, 'cancelled':-1} %}
+
+  <div class="crumb">
+    <a href="{{ url_for('trade.my_trades') }}">내 거래</a> <span>›</span> <span>거래 상세</span>
+  </div>
+
+  <div class="section-head">
+    <h1>거래 상세</h1>
+    <span class="hint">{{ '구매자' if is_buyer else '판매자' }} 입장에서 보고 있어요</span>
+  </div>
+
+  <div class="trade-card">
+    <div class="trade-product">
+      <div class="trade-thumb">
+        {% if trade['image_path'] %}
+          <img src="{{ url_for('static', filename='uploads/' ~ trade['image_path']) }}" alt="">
+        {% else %}<div class="noimg">🥕</div>{% endif %}
+      </div>
+      <div>
+        <a class="who" href="{{ url_for('product.detail', product_id=trade['product_id']) }}">{{ trade['product_title'] }}</a>
+        <div class="price">{{ '{:,}'.format(trade['amount']) }}원</div>
+        <div class="hint">판매자 {{ trade['seller_name'] }} · 구매자 {{ trade['buyer_name'] }}</div>
+      </div>
+    </div>
+
+    {% if st == 'cancelled' %}
+      <div class="notice danger"><strong>취소된 거래입니다.</strong></div>
+    {% else %}
+      <ol class="stepper">
+        {% for key, label in steps %}
+          <li class="{{ 'done' if order[st] >= loop.index0 else '' }}">
+            <span class="dot">{{ loop.index }}</span><span class="lb">{{ label }}</span>
+          </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
+
+    {# ---------- 구매자에게만, 수락 이후에만 계좌 표시 ---------- #}
+    {% if account_info %}
+      <div class="account-box">
+        <div class="account-head">💸 아래 계좌로 직접 송금해 주세요</div>
+
+        <div class="pay-grid">
+          <div class="pay-main">
+            <div class="account-no" id="acct" data-account="{{ account_info['account_no'] }}">
+              {{ account_info['bank_name'] }} {{ account_info['account_no'] }}
+            </div>
+            <div class="hint">예금주 <strong>{{ account_info['holder_name'] }}</strong> ·
+              보낼 금액 <strong>{{ '{:,}'.format(trade['amount']) }}원</strong></div>
+            <div class="actions">
+              <button type="button" class="btn" id="copy-acct">계좌번호 복사</button>
+              <a class="btn mint mobile-only" href="{{ account_info['toss_link'] }}">토스 앱으로 송금</a>
+            </div>
+          </div>
+
+          <div class="pay-qr">
+            <img src="{{ account_info['qr_uri'] }}" alt="토스 송금 QR 코드" width="150" height="150">
+            <div class="qr-cap">📱 휴대폰으로 스캔<br><span>토스 앱이 열립니다</span></div>
+            <details class="qr-alt">
+              <summary>토스가 없어요</summary>
+              <img src="{{ account_info['qr_text_uri'] }}" alt="계좌 정보 QR 코드" width="150" height="150">
+              <div class="qr-cap"><span>계좌 정보가 텍스트로 표시됩니다</span></div>
+            </details>
+          </div>
+        </div>
+
+        <p class="warn">⚠️ 플랫폼은 돈을 보관·중개하지 않습니다. 송금은 <strong>본인 은행 앱에서 직접</strong>
+          이루어지며, 입금 전 반드시 예금주를 확인하세요.</p>
+      </div>
+    {% elif is_buyer and st == 'requested' %}
+      <div class="notice info">판매자가 수락하면 입금 계좌가 표시됩니다.</div>
+    {% endif %}
+
+    {# ---------- 상태별 행동 버튼 ---------- #}
+    <div class="actions trade-actions">
+      {% if st == 'requested' and not is_buyer %}
+        <form class="inline" method="post" action="{{ url_for('trade.accept', trade_id=trade['id']) }}">
+          {{ form.csrf_token }}<button type="submit" class="btn-primary">거래 수락하기</button>
+        </form>
+      {% elif st == 'accepted' and is_buyer %}
+        <form class="inline" method="post" action="{{ url_for('trade.mark_sent', trade_id=trade['id']) }}">
+          {{ form.csrf_token }}<button type="submit" class="btn-primary">송금했어요</button>
+        </form>
+      {% elif st == 'sent' and not is_buyer %}
+        <form class="inline" method="post" action="{{ url_for('trade.confirm', trade_id=trade['id']) }}">
+          {{ form.csrf_token }}<button type="submit" class="btn-primary">입금 확인했어요</button>
+        </form>
+      {% elif st == 'sent' and is_buyer %}
+        <span class="badge sky">판매자의 입금 확인을 기다리는 중</span>
+      {% elif st == 'requested' and is_buyer %}
+        <span class="badge sky">판매자의 수락을 기다리는 중</span>
+      {% elif st == 'confirmed' %}
+        <span class="badge mint">✅ 거래가 완료되었습니다</span>
+      {% endif %}
+
+      <a class="btn" href="{{ url_for('chat.dm', peer_id=trade['seller_id'] if is_buyer else trade['buyer_id']) }}">💬 채팅</a>
+
+      {% if st not in ('confirmed', 'cancelled') %}
+        <form class="inline" method="post" action="{{ url_for('trade.cancel', trade_id=trade['id']) }}">
+          {{ form.csrf_token }}<button type="submit" class="btn danger">거래 취소</button>
+        </form>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+  {% if account_info %}<script src="{{ url_for('static', filename='js/trade.js') }}"></script>{% endif %}
+{% endblock %}

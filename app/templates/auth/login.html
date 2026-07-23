@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}로그인 · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill on" href="{{ url_for('auth.login') }}">🔑 로그인</a>
+  <a class="pill" href="{{ url_for('auth.register') }}">✨ 회원가입</a>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-brand">
+    🥕 중고마켓
+    <span class="sub">Safe &amp; Simple Trading</span>
+  </div>
+
+  <div class="form-panel">
+    <form method="post" novalidate>
+      {{ form.csrf_token }}
+
+      <div class="field">
+        <label for="{{ form.username.id }}">아이디</label>
+        {{ form.username(autocomplete='username', placeholder='아이디를 입력하세요') }}
+        {% if form.username.errors %}
+          <ul class="field-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.password.id }}">비밀번호</label>
+        {{ form.password(autocomplete='current-password', placeholder='비밀번호를 입력하세요') }}
+        {% if form.password.errors %}
+          <ul class="field-errors">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn-primary full">로그인</button>
+    </form>
+
+    <div class="divider-text">계정이 없으신가요?</div>
+    <a class="btn full" href="{{ url_for('auth.register') }}">회원가입하기</a>
+  </div>
+
+  <p class="chat-guard">🔒 비밀번호는 암호화되어 저장되며, 저희도 확인할 수 없습니다.</p>
+</div>
+{% endblock %}

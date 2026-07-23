@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}{{ '상품 수정' if mode == 'edit' else '내 물건 팔기' }} · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill on" href="{{ url_for('product.create') }}">🏷️ {{ '상품 수정' if mode == 'edit' else '판매하기' }}</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="crumb">
+    <a href="{{ url_for('main.index') }}">홈</a> <span>›</span>
+    <span>{{ '상품 수정' if mode == 'edit' else '판매하기' }}</span>
+  </div>
+
+  <div class="section-head">
+    <h1>{{ '상품 수정' if mode == 'edit' else '내 물건 팔기' }}</h1>
+    <span class="hint">{{ '정보를 수정합니다' if mode == 'edit' else '사진과 설명이 자세할수록 빨리 팔려요' }}</span>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" novalidate id="product-form">
+    {{ form.csrf_token }}
+
+    {# ---------- 사진 ---------- #}
+    <div class="form-panel">
+      <div class="panel-title">📷 상품 사진</div>
+      <label class="dropzone" id="dropzone">
+        <input type="file" id="image" name="image"
+               accept="image/png,image/jpeg,image/gif,image/webp">
+        <span class="dz-icon">🖼️</span>
+        <span class="dz-text">클릭하거나 파일을 여기로 끌어다 놓으세요</span>
+        <span class="dz-sub">PNG · JPG · GIF · WEBP / 최대 5MB</span>
+      </label>
+      <div class="dz-preview" id="dz-preview"><img id="dz-img" alt="선택한 이미지 미리보기"></div>
+      {% if mode == 'edit' and product['image_path'] %}
+        <p class="field-help">현재 등록된 이미지가 있습니다. 새 파일을 올리면 교체됩니다.</p>
+      {% endif %}
+    </div>
+
+    {# ---------- 기본 정보 ---------- #}
+    <div class="form-panel">
+      <div class="panel-title">📝 상품 정보</div>
+
+      <div class="field">
+        <div class="label-row">
+          <label for="{{ form.title.id }}">제목<span class="req">*</span></label>
+        </div>
+        {{ form.title(maxlength=100, placeholder="예) 자취방 원목 책상 팝니다") }}
+        <div class="counter" id="c-title">0 / 100</div>
+        {% if form.title.errors %}
+          <ul class="field-errors">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.price.id }}">판매 가격<span class="req">*</span></label>
+        <div class="input-affix">
+          {{ form.price(placeholder="0") }}
+          <span class="affix">원</span>
+        </div>
+        <p class="field-help">나눔은 0원으로 입력하세요.</p>
+        {% if form.price.errors %}
+          <ul class="field-errors">{% for e in form.price.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.description.id }}">상세 설명<span class="req">*</span></label>
+        {{ form.description(maxlength=2000, placeholder="구매 시기, 사용감, 하자 여부 등을 솔직하게 적어주세요.\n직거래 희망 지역도 알려주면 좋아요.") }}
+        <div class="counter" id="c-desc">0 / 2000</div>
+        {% if form.description.errors %}
+          <ul class="field-errors">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a class="btn" href="{{ url_for('product.detail', product_id=product['id']) if mode == 'edit' else url_for('main.index') }}">취소</a>
+      <button type="submit" class="btn-primary">{{ '수정 완료' if mode == 'edit' else '등록하기' }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/product-form.js') }}"></script>
+{% endblock %}

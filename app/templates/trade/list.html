@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}내 거래 · 중고마켓{% endblock %}
+
+{% set labels = {'requested':'구매요청', 'accepted':'수락됨', 'sent':'송금완료', 'confirmed':'거래완료', 'cancelled':'취소됨'} %}
+{% set tones  = {'requested':'sky', 'accepted':'carrot', 'sent':'carrot', 'confirmed':'mint', 'cancelled':'gray'} %}
+
+{% block pills %}
+  <a class="pill on" href="{{ url_for('trade.my_trades') }}">🤝 내 거래</a>
+  <a class="pill" href="{{ url_for('trade.account') }}">🏦 정산 계좌</a>
+{% endblock %}
+
+{% block content %}
+  <div class="section-head">
+    <h1>내 거래 <span class="num">{{ trades|length }}</span></h1>
+    <span class="hint">구매·판매 진행 상황을 한눈에</span>
+  </div>
+
+  {% if trades %}
+    <ul class="rows">
+      {% for t in trades %}
+        {% set im_buyer = t['buyer_id'] == g.user['id'] %}
+        <li>
+          <a class="row-link" href="{{ url_for('trade.detail', trade_id=t['id']) }}">
+            <div class="row-thumb">
+              {% if t['image_path'] %}
+                <img src="{{ url_for('static', filename='uploads/' ~ t['image_path']) }}" alt="">
+              {% else %}<div class="noimg">🥕</div>{% endif %}
+            </div>
+
+            <div class="row-body">
+              <div>
+                <span class="badge-out {{ '' if im_buyer else 'mint' }}">{{ '구매' if im_buyer else '판매' }}</span>
+              </div>
+              <div class="row-title">{{ t['product_title'] }}</div>
+              <div class="meta-line">
+                <span class="mi">👤</span>
+                {{ ('판매자 ' ~ t['seller_name']) if im_buyer else ('구매자 ' ~ t['buyer_name']) }}
+              </div>
+              <div class="meta-line dim">
+                <span class="mi">🕒</span> 최근 변경 {{ t['updated_at'][:16] }}
+              </div>
+              <div class="chips">
+                <span class="chip">#{{ '내가구매' if im_buyer else '내가판매' }}</span>
+                <span class="chip">#{{ labels[t['status']] }}</span>
+              </div>
+            </div>
+
+            <div class="row-aside">
+              <div>
+                <div class="price-lg">{{ '{:,}'.format(t['amount']) }}<span class="unit">원</span></div>
+                <div class="badge {{ tones[t['status']] }}">{{ labels[t['status']] }}</div>
+              </div>
+              <span class="btn small">상세 보기 ›</span>
+            </div>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty">
+      <span class="big">🤝</span>
+      아직 거래가 없어요.<br>마음에 드는 상품에서 '구매 요청'을 눌러보세요!
+    </div>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% from "_card.html" import product_card %}
+{% block title %}{{ user['username'] }} · 중고마켓{% endblock %}
+
+{% set is_me = g.user and g.user['id'] == user['id'] %}
+
+{% block pills %}
+  <a class="pill on" href="{{ url_for('user.profile', username=user['username']) }}">👤 {{ user['username'] }}</a>
+  {% if is_me %}
+    <a class="pill" href="{{ url_for('user.settings') }}">✏️ 프로필 수정</a>
+    <a class="pill" href="{{ url_for('user.change_password') }}">🔒 비밀번호</a>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+  <section class="profile-head">
+    <div class="profile-top">
+      <div class="avatar lg">{{ user['username'][0]|upper }}</div>
+      <div class="grow">
+        <h1>
+          {{ user['username'] }}
+          {% if user['role'] == 'admin' %}<span class="badge carrot">관리자</span>{% endif %}
+          {% if user['status'] == 'blocked' %}<span class="badge danger">차단됨</span>{% endif %}
+        </h1>
+        <div class="meta-line dim"><span class="mi">📅</span> {{ user['created_at'][:10] }} 가입</div>
+        <div class="meta-line dim"><span class="mi">📦</span> 판매 상품 {{ products|length }}개</div>
+      </div>
+    </div>
+
+    <p class="bio">{{ user['bio'] or '아직 소개글이 없어요.' }}</p>
+
+    <div class="actions">
+      {% if is_me %}
+        <a class="btn" href="{{ url_for('user.settings') }}">프로필 수정</a>
+        <a class="btn" href="{{ url_for('trade.account') }}">정산 계좌 관리</a>
+      {% elif g.user %}
+        <a class="btn-primary" href="{{ url_for('chat.dm', peer_id=user['id']) }}">💬 채팅하기</a>
+      {% endif %}
+    </div>
+
+    {% if g.user and not is_me %}
+      <details class="report-box">
+        <summary>이 사용자 신고하기</summary>
+        <form method="post" action="{{ url_for('user.report', username=user['username']) }}">
+          {{ report_form.csrf_token }}
+          {{ render_field(report_form.reason) }}
+          <button type="submit" class="btn danger">신고 접수</button>
+        </form>
+      </details>
+    {% endif %}
+  </section>
+
+  <div class="section-head">
+    <h2>{{ '내 판매 상품' if is_me else user['username'] ~ '님의 상품' }}
+        <span class="num">{{ products|length }}</span></h2>
+    {% if is_me %}<a class="btn small" href="{{ url_for('product.create') }}">+ 상품 등록</a>{% endif %}
+  </div>
+
+  {% if products %}
+    <ul class="product-grid grid-top">
+      {% for p in products %}{{ product_card(p, show_seller=false) }}{% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty">
+      <span class="big">📦</span>
+      {{ '아직 등록한 상품이 없어요. 첫 물건을 올려보세요!' if is_me else '등록한 상품이 없어요.' }}
+    </div>
+  {% endif %}
+{% endblock %}

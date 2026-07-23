@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}정산 계좌 · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill" href="{{ url_for('trade.my_trades') }}">🤝 내 거래</a>
+  <a class="pill on" href="{{ url_for('trade.account') }}">🏦 정산 계좌</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="crumb">
+    <a href="{{ url_for('trade.my_trades') }}">내 거래</a> <span>›</span> <span>정산 계좌</span>
+  </div>
+
+  <div class="section-head">
+    <h1>정산 계좌</h1>
+    <span class="hint">상품이 팔렸을 때 입금받을 계좌예요</span>
+  </div>
+
+  {% if existing %}
+    <div class="form-panel">
+      <div class="panel-title">✅ 등록된 계좌</div>
+      <div class="acct-summary">
+        <div class="acct-bank">{{ existing['bank_name'] }}</div>
+        <div class="acct-masked">···· ···· {{ existing['account_last4'] }}</div>
+        <div class="meta-line dim"><span class="mi">👤</span> 예금주 {{ existing['holder_name'] }}</div>
+        <div class="meta-line dim"><span class="mi">🕒</span> {{ existing['updated_at'][:10] }} 등록</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="notice info">
+    🔐 계좌번호는 <strong>AES-256-GCM으로 암호화</strong>되어 저장되며,
+    <strong>거래를 수락한 구매자에게만</strong> 표시됩니다.
+    이 화면에서도 뒤 4자리만 보여요. 플랫폼은 돈을 보관하거나 전달하지 않습니다.
+  </div>
+
+  <form method="post" novalidate>
+    {{ form.csrf_token }}
+    <div class="form-panel">
+      <div class="panel-title">{{ '🏦 계좌 변경' if existing else '🏦 계좌 등록' }}</div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="{{ form.bank_name.id }}">은행<span class="req">*</span></label>
+          {{ form.bank_name() }}
+          {% if form.bank_name.errors %}
+            <ul class="field-errors">{% for e in form.bank_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+          {% endif %}
+        </div>
+        <div class="field">
+          <label for="{{ form.holder_name.id }}">예금주<span class="req">*</span></label>
+          {{ form.holder_name(placeholder='홍길동') }}
+          {% if form.holder_name.errors %}
+            <ul class="field-errors">{% for e in form.holder_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="{{ form.account_no.id }}">계좌번호<span class="req">*</span></label>
+        {{ form.account_no(placeholder='숫자만 입력 (- 없이도 가능)') }}
+        <p class="field-help">예금주명이 다르면 구매자가 송금을 취소할 수 있어요. 정확히 입력해 주세요.</p>
+        {% if form.account_no.errors %}
+          <ul class="field-errors">{% for e in form.account_no.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a class="btn" href="{{ url_for('trade.my_trades') }}">취소</a>
+      <button type="submit" class="btn-primary">{{ '계좌 변경' if existing else '계좌 등록' }}</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

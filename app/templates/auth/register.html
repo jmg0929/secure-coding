@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}회원가입 · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill" href="{{ url_for('auth.login') }}">🔑 로그인</a>
+  <a class="pill on" href="{{ url_for('auth.register') }}">✨ 회원가입</a>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-brand">
+    🥕 중고마켓
+    <span class="sub">이웃과 함께하는 중고거래</span>
+  </div>
+
+  <div class="form-panel">
+    <form method="post" novalidate>
+      {{ form.csrf_token }}
+
+      <div class="field">
+        <label for="{{ form.username.id }}">아이디<span class="req">*</span></label>
+        {{ form.username(autocomplete='username', placeholder='영문·숫자·밑줄 3~20자') }}
+        <p class="field-help">가입 후에는 변경할 수 없어요.</p>
+        {% if form.username.errors %}
+          <ul class="field-errors">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.password.id }}">비밀번호<span class="req">*</span></label>
+        {{ form.password(autocomplete='new-password', placeholder='8자 이상, 영문+숫자 조합') }}
+        <p class="field-help">영문과 숫자를 모두 포함해 8자 이상 입력하세요.</p>
+        {% if form.password.errors %}
+          <ul class="field-errors">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.confirm.id }}">비밀번호 확인<span class="req">*</span></label>
+        {{ form.confirm(autocomplete='new-password', placeholder='한 번 더 입력하세요') }}
+        {% if form.confirm.errors %}
+          <ul class="field-errors">{% for e in form.confirm.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn-primary full">가입하기</button>
+    </form>
+
+    <div class="divider-text">이미 계정이 있으신가요?</div>
+    <a class="btn full" href="{{ url_for('auth.login') }}">로그인하기</a>
+  </div>
+</div>
+{% endblock %}

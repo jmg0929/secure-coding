@@ -1,0 +1,24 @@
+{# 상품 카드 (목록/프로필 공용). show_seller: 판매자명 표시 여부 #}
+{% macro product_card(p, show_seller=true) %}
+  <li class="product-card">
+    <a href="{{ url_for('product.detail', product_id=p['id']) }}">
+      <div class="thumb-wrap">
+        {% if p['image_path'] %}
+          <img src="{{ url_for('static', filename='uploads/' ~ p['image_path']) }}" alt="{{ p['title'] }}">
+        {% else %}
+          <div class="noimg">🥕 이미지 없음</div>
+        {% endif %}
+        {% if p['status'] == 'sold' %}
+          <div class="sold-overlay">거래완료</div>
+        {% endif %}
+      </div>
+      <div class="product-meta">
+        <span class="product-title">{{ p['title'] }}</span>
+        <span class="price">{{ '{:,}'.format(p['price']) }}원</span>
+        {% if show_seller and p['seller_name'] is defined %}
+          <span class="seller">{{ p['seller_name'] }}</span>
+        {% endif %}
+      </div>
+    </a>
+  </li>
+{% endmacro %}

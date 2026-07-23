@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+{% block title %}관리자 · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill on" href="{{ url_for('admin.dashboard') }}">🛠️ 대시보드</a>
+{% endblock %}
+
+{% block content %}
+  <div class="section-head">
+    <h1>관리자 대시보드</h1>
+    <span class="hint">통계 · 신고 처리 · 사용자 관리</span>
+  </div>
+
+  {# ================= 통계 ================= #}
+  <div class="stat-grid">
+    <div class="stat-card">
+      <div class="stat-label">전체 사용자</div>
+      <div class="stat-value">{{ '{:,}'.format(stats['users_total']) }}<span class="u">명</span></div>
+      <div class="stat-sub">
+        <span class="dot mint"></span>활성 {{ stats['users_active'] }}
+        <span class="dot danger"></span>차단 {{ stats['users_blocked'] }}
+      </div>
+      <div class="stat-delta">최근 7일 +{{ stats['new_users_7d'] }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">등록 상품</div>
+      <div class="stat-value">{{ '{:,}'.format(stats['products_total']) }}<span class="u">개</span></div>
+      <div class="stat-sub">
+        <span class="dot mint"></span>판매중 {{ stats['products_available'] }}
+        <span class="dot gray"></span>완료 {{ stats['products_sold'] }}
+        <span class="dot danger"></span>숨김 {{ stats['products_hidden'] }}
+      </div>
+      <div class="stat-delta">최근 7일 +{{ stats['new_products_7d'] }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">거래</div>
+      <div class="stat-value">{{ '{:,}'.format(stats['trades_total']) }}<span class="u">건</span></div>
+      <div class="stat-sub">
+        <span class="dot carrot"></span>진행중 {{ stats['trades_ongoing'] }}
+        <span class="dot mint"></span>완료 {{ stats['trades_done'] }}
+        <span class="dot gray"></span>취소 {{ stats['trades_cancelled'] }}
+      </div>
+      <div class="stat-delta">누적 거래액 {{ '{:,}'.format(stats['volume']) }}원</div>
+    </div>
+
+    <div class="stat-card {{ 'alert' if stats['reports_open'] else '' }}">
+      <div class="stat-label">미처리 신고</div>
+      <div class="stat-value">{{ stats['reports_open'] }}<span class="u">건</span></div>
+      <div class="stat-sub"><span class="dot gray"></span>전체 신고 {{ stats['reports_total'] }}건</div>
+      <div class="stat-delta">채팅 메시지 {{ '{:,}'.format(stats['messages']) }}개</div>
+    </div>
+  </div>
+
+  {# ================= 숨김 상품 ================= #}
+  <details class="sec" {{ 'open' if hidden }}>
+  <summary><span class="sec-t">숨김 처리된 상품</span><span class="num">{{ hidden|length }}</span></summary>
+  {% if hidden %}
+    <div class="table-scroll">
+      <table class="admin-table">
+        <thead><tr><th>상품</th><th>판매자</th><th>가격</th><th>등록일</th><th>처리</th></tr></thead>
+        <tbody>
+          {% for p in hidden %}
+            <tr>
+              <td><a href="{{ url_for('product.detail', product_id=p['id']) }}">{{ p['title'] }}</a></td>
+              <td>{{ p['seller_name'] }}</td>
+              <td>{{ '{:,}'.format(p['price']) }}원</td>
+              <td>{{ p['created_at'][:10] }}</td>
+              <td>
+                <form class="inline" method="post" action="{{ url_for('admin.unhide_product', product_id=p['id']) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn small">숨김 해제</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty compact"><span class="big">👍</span>숨김 처리된 상품이 없습니다.</div>
+  {% endif %}
+  </details>
+
+  {# ================= 거래 내역 ================= #}
+  {% set tlabels = {'requested':'구매요청', 'accepted':'수락됨', 'sent':'송금완료', 'confirmed':'거래완료', 'cancelled':'취소됨'} %}
+  {% set ttones  = {'requested':'sky', 'accepted':'carrot', 'sent':'carrot', 'confirmed':'mint', 'cancelled':'gray'} %}
+
+  <details class="sec">
+  <summary><span class="sec-t">거래 내역</span><span class="num">{{ trades|length }}</span></summary>
+  {% if trades %}
+    <div class="table-scroll">
+      <table class="admin-table">
+        <thead>
+          <tr><th>상품</th><th>판매자</th><th>구매자</th><th>금액</th><th>상태</th><th>최근 변경</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for t in trades %}
+            <tr>
+              <td><a href="{{ url_for('product.detail', product_id=t['product_id']) }}">{{ t['product_title'] }}</a></td>
+              <td><a href="{{ url_for('user.profile', username=t['seller_name']) }}">{{ t['seller_name'] }}</a></td>
+              <td><a href="{{ url_for('user.profile', username=t['buyer_name']) }}">{{ t['buyer_name'] }}</a></td>
+              <td>{{ '{:,}'.format(t['amount']) }}원</td>
+              <td><span class="badge {{ ttones[t['status']] }}">{{ tlabels[t['status']] }}</span></td>
+              <td>{{ t['updated_at'][:16] }}</td>
+              <td><a class="btn small" href="{{ url_for('trade.detail', trade_id=t['id']) }}">상세</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty compact"><span class="big">🤝</span>아직 거래 내역이 없습니다.</div>
+  {% endif %}
+  </details>
+
+  {# ================= 신고 ================= #}
+  <details class="sec" open>
+  <summary><span class="sec-t">신고 목록</span><span class="num">{{ stats['reports_open'] }}</span><span class="hint">미처리</span></summary>
+  {% if reports %}
+    <div class="table-scroll">
+      <table class="admin-table">
+        <thead><tr><th>일시</th><th>신고자</th><th>대상</th><th>사유</th><th>상태</th><th>처리</th></tr></thead>
+        <tbody>
+          {% for r in reports %}
+            <tr>
+              <td>{{ r['created_at'][:16] }}</td>
+              <td>{{ r['reporter_name'] }}</td>
+              <td>
+                <span class="badge {{ 'sky' if r['target_type'] == 'product' else 'carrot' }}">
+                  {{ '상품' if r['target_type'] == 'product' else '유저' }}
+                </span>
+              </td>
+              <td>{{ r['reason'] }}</td>
+              <td>
+                {% if r['status'] == 'open' %}<span class="badge danger">접수</span>
+                {% else %}<span class="badge gray">처리완료</span>{% endif %}
+              </td>
+              <td>
+                {% if r['status'] == 'open' %}
+                  <form class="inline" method="post" action="{{ url_for('admin.resolve_report', report_id=r['id']) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn small">처리완료</button>
+                  </form>
+                  {% if r['target_type'] == 'product' %}
+                    <form class="inline" method="post" action="{{ url_for('admin.hide_product', product_id=r['target_id']) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn small danger">상품숨김</button>
+                    </form>
+                  {% else %}
+                    <form class="inline" method="post" action="{{ url_for('admin.toggle_block', user_id=r['target_id']) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn small danger">유저차단</button>
+                    </form>
+                  {% endif %}
+                {% else %}—{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty compact"><span class="big">✅</span>접수된 신고가 없습니다.</div>
+  {% endif %}
+  </details>
+
+  {# ================= 감사 로그 ================= #}
+  {% set alabels = {
+      'payout_account.upsert': '계좌 등록/변경', 'payout_account.view': '계좌 열람',
+      'trade.confirmed': '거래 완료 확정',
+      'user.blocked': '유저 차단', 'user.active': '유저 차단해제',
+      'user.role.admin': '관리자 지정', 'user.role.user': '관리자 해제',
+      'product.hide': '상품 숨김', 'product.unhide': '상품 복구',
+      'report.resolve': '신고 처리'} %}
+  {% set atones = {
+      'payout_account.view': 'danger', 'user.role.admin': 'danger',
+      'user.blocked': 'danger', 'user.role.user': 'carrot',
+      'user.active': 'mint', 'trade.confirmed': 'mint',
+      'product.unhide': 'mint', 'product.hide': 'carrot',
+      'payout_account.upsert': 'sky', 'report.resolve': 'gray'} %}
+
+  <details class="sec">
+  <summary><span class="sec-t">감사 로그</span><span class="num">{{ logs|length }}</span>
+    <span class="hint">최근 100건</span></summary>
+  <div class="notice info">
+    📝 민감한 행위(계좌 열람 · 권한 변경 · 차단 · 숨김)는 <strong>누가 · 언제 · 어디서</strong> 수행했는지
+    자동 기록됩니다. 로그는 사용자가 삭제되어도 보존되며, <strong>수정·삭제 기능은 제공하지 않습니다.</strong>
+  </div>
+  {% if logs %}
+    <div class="table-scroll">
+      <table class="admin-table">
+        <thead><tr><th>일시</th><th>행위자</th><th>행위</th><th>대상</th><th>IP</th></tr></thead>
+        <tbody>
+          {% for l in logs %}
+            <tr>
+              <td>{{ l['created_at'][:19] }}</td>
+              <td>
+                {% if l['actor_name'] %}
+                  <a href="{{ url_for('user.profile', username=l['actor_name']) }}">{{ l['actor_name'] }}</a>
+                {% else %}
+                  <span class="hint">(탈퇴한 사용자)</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge {{ atones.get(l['action'], 'gray') }}">
+                  {{ alabels.get(l['action'], l['action']) }}
+                </span>
+              </td>
+              <td>{{ l['target'] or '—' }}</td>
+              <td class="mono">{{ l['ip'] or '—' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty compact"><span class="big">📝</span>기록된 감사 로그가 없습니다.</div>
+  {% endif %}
+  </details>
+
+  {# ================= 사용자 ================= #}
+  <details class="sec" open>
+  <summary><span class="sec-t">사용자 관리</span><span class="num">{{ users|length }}</span></summary>
+  <div class="notice info">
+    ⚠️ <strong>관리자 지정</strong>은 권한 상승에 해당합니다. 자기 자신은 변경할 수 없고,
+    마지막 관리자는 강등할 수 없으며, 모든 변경은 감사 로그에 기록됩니다.
+  </div>
+  <div class="table-scroll">
+    <table class="admin-table">
+      <thead><tr><th>아이디</th><th>권한</th><th>상태</th><th>가입일</th><th>권한 관리</th><th>계정 관리</th></tr></thead>
+      <tbody>
+        {% for u in users %}
+          {% set is_me = u['id'] == g.user['id'] %}
+          <tr>
+            <td>
+              <a href="{{ url_for('user.profile', username=u['username']) }}">{{ u['username'] }}</a>
+              {% if is_me %}<span class="badge gray">나</span>{% endif %}
+            </td>
+            <td>
+              {% if u['role'] == 'admin' %}<span class="badge carrot">관리자</span>
+              {% else %}<span class="badge gray">일반</span>{% endif %}
+            </td>
+            <td>
+              {% if u['status'] == 'blocked' %}<span class="badge danger">차단됨</span>
+              {% else %}<span class="badge mint">활성</span>{% endif %}
+            </td>
+            <td>{{ u['created_at'][:10] }}</td>
+            <td>
+              {% if is_me %}
+                <span class="hint">본인</span>
+              {% else %}
+                <form class="inline" method="post" action="{{ url_for('admin.toggle_role', user_id=u['id']) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn small {{ 'danger' if u['role'] == 'admin' }}">
+                    {{ '관리자 해제' if u['role'] == 'admin' else '관리자 지정' }}
+                  </button>
+                </form>
+              {% endif %}
+            </td>
+            <td>
+              {% if u['role'] == 'admin' %}
+                <span class="hint">관리자는 차단 불가</span>
+              {% else %}
+                <form class="inline" method="post" action="{{ url_for('admin.toggle_block', user_id=u['id']) }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button type="submit" class="btn small {{ 'danger' if u['status'] != 'blocked' }}">
+                    {{ '차단해제' if u['status'] == 'blocked' else '차단' }}
+                  </button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  </details>
+{% endblock %}

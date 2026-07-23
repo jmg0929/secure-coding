@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "_card.html" import product_card %}
+{% block title %}{% if q %}{{ q }} 검색결과{% else %}중고마켓{% endif %}{% endblock %}
+
+{% block pills %}
+  {% set pills = [('all','🛍️ 전체'), ('available','✨ 판매중'), ('sold','✅ 거래완료')] %}
+  {% for key, label in pills %}
+    <a class="pill {{ 'on' if f == key }}"
+       href="{{ url_for('main.index', f=key, s=s, q=q or None) }}">{{ label }}</a>
+  {% endfor %}
+{% endblock %}
+
+{% block content %}
+  {% if not q %}
+    <section class="hero">
+      <div>
+        <div class="hero-eyebrow">Safe &amp; Simple</div>
+        <h2>이웃과 안전하게,<br>가볍게 거래하세요</h2>
+        <a class="btn-primary" href="{{ url_for('product.create') if g.user else url_for('auth.login') }}">
+          내 물건 팔아보기
+        </a>
+      </div>
+      <div class="hero-art">🧺</div>
+    </section>
+  {% endif %}
+
+  <nav class="subtabs">
+    {% set tabs = [('recent','최신순'), ('low','낮은가격순'), ('high','높은가격순')] %}
+    {% for key, label in tabs %}
+      <a class="{{ 'on' if s == key }}"
+         href="{{ url_for('main.index', f=f, s=key, q=q or None) }}">{{ label }}</a>
+    {% endfor %}
+    <span class="more">
+      {% if q %}'{{ q }}' 검색{% else %}전체 {{ stats['all'] }}개{% endif %}
+    </span>
+  </nav>
+
+  <div class="page-head">
+    <h1>{% if q %}'{{ q }}' 검색 결과
+        {%- elif f == 'available' %}판매중인 상품
+        {%- elif f == 'sold' %}거래완료된 상품
+        {%- else %}지금 거래되는 물건{% endif %}</h1>
+    {% if products %}<span class="count">{{ products|length }}개</span>{% endif %}
+  </div>
+
+  {% if products %}
+    <ul class="product-grid">
+      {% for p in products %}{{ product_card(p) }}{% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty">
+      <span class="big">🧺</span>
+      {% if q %}'{{ q }}'에 해당하는 상품이 없어요.
+      {% else %}아직 등록된 상품이 없어요. 첫 상품을 올려보세요!{% endif %}
+    </div>
+  {% endif %}
+{% endblock %}

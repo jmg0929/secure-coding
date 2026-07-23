@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}중고마켓{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="layout">
+
+  {# ---------- 좌측 사이드바 ---------- #}
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('main.index') }}">
+      <span class="brand-mark">🥕</span><span class="brand-name">중고마켓</span>
+    </a>
+
+    <nav class="side-nav">
+      <a href="{{ url_for('main.index') }}" class="{{ 'on' if request.endpoint == 'main.index' }}">
+        <span class="ico">🏠</span><span>홈</span>
+      </a>
+      {% if g.user %}
+        <a href="{{ url_for('product.create') }}" class="{{ 'on' if request.endpoint == 'product.create' }}">
+          <span class="ico">🏷️</span><span>판매하기</span>
+        </a>
+        <a href="{{ url_for('chat.inbox') }}" class="{{ 'on' if request.blueprint == 'chat' }}">
+          <span class="ico">💬</span><span>채팅</span>
+        </a>
+        <a href="{{ url_for('trade.my_trades') }}" class="{{ 'on' if request.blueprint == 'trade' }}">
+          <span class="ico">🤝</span><span>거래</span>
+        </a>
+        <a href="{{ url_for('user.profile', username=g.user['username']) }}" class="{{ 'on' if request.blueprint == 'user' }}">
+          <span class="ico">👤</span><span>마이페이지</span>
+        </a>
+        {% if g.user['role'] == 'admin' %}
+          <a href="{{ url_for('admin.dashboard') }}" class="{{ 'on' if request.blueprint == 'admin' }}">
+            <span class="ico">🛠️</span><span>관리자</span>
+          </a>
+        {% endif %}
+      {% else %}
+        <a href="{{ url_for('auth.login') }}" class="{{ 'on' if request.endpoint == 'auth.login' }}">
+          <span class="ico">🔑</span><span>로그인</span>
+        </a>
+        <a href="{{ url_for('auth.register') }}" class="{{ 'on' if request.endpoint == 'auth.register' }}">
+          <span class="ico">✨</span><span>회원가입</span>
+        </a>
+      {% endif %}
+    </nav>
+
+    {% if g.user %}
+      <div class="side-foot">
+        <div class="side-user">
+          <div class="avatar sm">{{ g.user['username'][0]|upper }}</div>
+          <span class="uname">{{ g.user['username'] }}</span>
+        </div>
+        <form action="{{ url_for('auth.logout') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="linkbtn">로그아웃</button>
+        </form>
+      </div>
+    {% endif %}
+  </aside>
+
+  {# ---------- 우측 본문 ---------- #}
+  <div class="main">
+    <header class="topbar">
+      <div class="pills">
+        {% block pills %}
+          <a class="pill on" href="{{ url_for('main.index') }}">🛍️ 전체</a>
+        {% endblock %}
+      </div>
+      <form class="topsearch" action="{{ url_for('main.index') }}" method="get" role="search">
+        <input type="text" name="q" placeholder="어떤 물건을 찾으세요?"
+               value="{{ q|default('') }}" maxlength="100" aria-label="상품 검색">
+        <button type="submit" aria-label="검색">🔍</button>
+      </form>
+    </header>
+
+    <div class="content">
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <ul class="flash">
+            {% for m in messages %}<li>{{ m }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+
+      <footer class="site-footer">
+        Tiny Second-hand Shopping Platform · Secure Coding 과제
+      </footer>
+    </div>
+  </div>
+</div>
+
+{# ---------- 모바일 하단 탭 ---------- #}
+<nav class="mobile-nav">
+  <a href="{{ url_for('main.index') }}" class="{{ 'on' if request.endpoint == 'main.index' }}"><span>🏠</span>홈</a>
+  {% if g.user %}
+    <a href="{{ url_for('product.create') }}" class="{{ 'on' if request.endpoint == 'product.create' }}"><span>🏷️</span>판매</a>
+    <a href="{{ url_for('chat.inbox') }}" class="{{ 'on' if request.blueprint == 'chat' }}"><span>💬</span>채팅</a>
+    <a href="{{ url_for('trade.my_trades') }}" class="{{ 'on' if request.blueprint == 'trade' }}"><span>🤝</span>거래</a>
+    <a href="{{ url_for('user.profile', username=g.user['username']) }}" class="{{ 'on' if request.blueprint == 'user' }}"><span>👤</span>MY</a>
+  {% else %}
+    <a href="{{ url_for('auth.login') }}"><span>🔑</span>로그인</a>
+  {% endif %}
+</nav>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>

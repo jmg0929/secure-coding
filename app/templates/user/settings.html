@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}프로필 수정 · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill" href="{{ url_for('user.profile', username=g.user['username']) }}">👤 내 프로필</a>
+  <a class="pill on" href="{{ url_for('user.settings') }}">✏️ 프로필 수정</a>
+  <a class="pill" href="{{ url_for('user.change_password') }}">🔒 비밀번호</a>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="crumb">
+    <a href="{{ url_for('user.profile', username=g.user['username']) }}">내 프로필</a>
+    <span>›</span> <span>프로필 수정</span>
+  </div>
+
+  <div class="section-head">
+    <h1>프로필 수정</h1>
+    <span class="hint">이웃들에게 나를 소개해보세요</span>
+  </div>
+
+  <form method="post" novalidate>
+    {{ form.csrf_token }}
+    <div class="form-panel">
+      <div class="panel-title">✏️ 소개글</div>
+      <div class="field">
+        <label for="{{ form.bio.id }}">자기소개</label>
+        {{ form.bio(maxlength=500, placeholder='어떤 물건을 주로 거래하시나요? 거래 가능 시간대나 지역을 적어두면 좋아요.') }}
+        <div class="counter" id="c-bio">0 / 500</div>
+        {% if form.bio.errors %}
+          <ul class="field-errors">{% for e in form.bio.errors %}<li>{{ e }}</li>{% endfor %}</ul>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="form-actions">
+      <a class="btn" href="{{ url_for('user.profile', username=g.user['username']) }}">취소</a>
+      <button type="submit" class="btn-primary">저장하기</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/bio-counter.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}{{ peer['username'] }}님과의 대화 · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill" href="{{ url_for('chat.inbox') }}">← 채팅 목록</a>
+  <a class="pill on" href="#">💬 {{ peer['username'] }}</a>
+{% endblock %}
+
+{% block content %}
+  <div class="chat-shell" id="dm"
+       data-peer-id="{{ peer['id'] }}"
+       data-my-id="{{ g.user['id'] }}">
+
+    <div class="chat-head">
+      <a class="iconbtn" href="{{ url_for('chat.inbox') }}" aria-label="뒤로">←</a>
+      <div class="avatar">{{ peer['username'][0]|upper }}</div>
+      <div>
+        <a class="who" href="{{ url_for('user.profile', username=peer['username']) }}">{{ peer['username'] }}</a>
+        <div class="status">● 대화중</div>
+      </div>
+      <a class="btn small" href="{{ url_for('trade.my_trades') }}">거래 보기</a>
+    </div>
+
+    <ul class="messages" id="dm-messages">
+      {% set ns = namespace(day='') %}
+      {% for m in history %}
+        {% set day = m['created_at'][:10] %}
+        {% if day != ns.day %}
+          {% set ns.day = day %}
+          <li class="date-sep">{{ day }}</li>
+        {% endif %}
+        <li class="bubble-row {{ 'mine' if m['sender_id'] == g.user['id'] else 'theirs' }}">
+          <div class="bubble-wrap">
+            <div class="bubble">{{ m['body'] }}</div>
+            <span class="bubble-time">{{ m['created_at'][11:16] }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    <form class="chat-form" id="dm-form">
+      <input id="dm-input" type="text" maxlength="1000"
+             placeholder="메시지를 입력하세요" autocomplete="off">
+      <button type="submit">전송</button>
+    </form>
+  </div>
+
+  <p class="chat-guard">
+    🔒 대화 내용은 두 사람만 볼 수 있어요. 계좌·비밀번호 등 민감한 정보는 주고받지 마세요.
+  </p>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/dm.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block title %}{{ product['title'] }} · 중고마켓{% endblock %}
+{% block pills %}
+  <a class="pill" href="{{ url_for('main.index') }}">← 목록으로</a>
+  <a class="pill on" href="#">🛍️ 상품 상세</a>
+{% endblock %}
+
+{% block content %}
+  {% set is_owner = g.user and (g.user['id'] == product['seller_id'] or g.user['role'] == 'admin') %}
+
+  <div class="crumb">
+    <a href="{{ url_for('main.index') }}">홈</a> <span>›</span>
+    <a href="{{ url_for('user.profile', username=product['seller_name']) }}">{{ product['seller_name'] }}</a>
+    <span>›</span> <span>{{ product['title'] }}</span>
+  </div>
+
+  <article class="product-detail">
+    <div class="detail-media">
+      {% if product['image_path'] %}
+        <img src="{{ url_for('static', filename='uploads/' ~ product['image_path']) }}" alt="{{ product['title'] }}">
+      {% else %}
+        <div class="noimg">🥕 이미지 없음</div>
+      {% endif %}
+      {% if product['status'] == 'sold' %}
+        <div class="sold-overlay">거래완료</div>
+      {% endif %}
+    </div>
+
+    <div class="detail-body">
+      <div>
+        {% if product['status'] == 'available' %}
+          <span class="badge mint">판매중</span>
+        {% elif product['status'] == 'sold' %}
+          <span class="badge gray">거래완료</span>
+        {% else %}
+          <span class="badge danger">숨김</span>
+        {% endif %}
+      </div>
+
+      <h1>{{ product['title'] }}</h1>
+      <p class="price-lg big">{{ '{:,}'.format(product['price']) }}<span class="unit">원</span></p>
+
+      <div class="detail-seller">
+        <div class="avatar">{{ product['seller_name'][0]|upper }}</div>
+        <div class="grow">
+          <a class="who" href="{{ url_for('user.profile', username=product['seller_name']) }}">{{ product['seller_name'] }}</a>
+          <div class="sub">판매자</div>
+        </div>
+        <a class="btn small" href="{{ url_for('user.profile', username=product['seller_name']) }}">프로필 ›</a>
+      </div>
+
+      <div class="meta-line dim"><span class="mi">📅</span> {{ product['created_at'][:10] }} 등록</div>
+      <div class="chips detail-chips">
+        <span class="chip">#{{ '판매중' if product['status'] == 'available' else '거래완료' }}</span>
+        <span class="chip">#중고거래</span>
+        <span class="chip">#직거래</span>
+      </div>
+
+      <div class="description">{{ product['description'] }}</div>
+
+      <div class="actions">
+        {% if is_owner %}
+          <form class="inline" method="post" action="{{ url_for('product.toggle_status', product_id=product['id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn mint">
+              {{ '다시 판매중으로' if product['status'] == 'sold' else '거래완료로 변경' }}
+            </button>
+          </form>
+          <a class="btn" href="{{ url_for('product.edit', product_id=product['id']) }}">수정</a>
+          <form class="inline" method="post" action="{{ url_for('product.delete', product_id=product['id']) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn danger">삭제</button>
+          </form>
+        {% elif g.user %}
+          {% if product['status'] == 'available' %}
+            <form class="inline" method="post" action="{{ url_for('trade.create', product_id=product['id']) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-primary">🤝 구매 요청하기</button>
+            </form>
+          {% endif %}
+          <a class="btn" href="{{ url_for('chat.dm', peer_id=product['seller_id']) }}">
+            💬 판매자와 채팅
+          </a>
+        {% else %}
+          <a class="btn-primary" href="{{ url_for('auth.login') }}">로그인하고 거래하기</a>
+        {% endif %}
+      </div>
+
+      {% if g.user and g.user['id'] != product['seller_id'] %}
+        <details class="report-box">
+          <summary>이 상품 신고하기</summary>
+          <form method="post" action="{{ url_for('product.report', product_id=product['id']) }}">
+            {{ report_form.csrf_token }}
+            {{ render_field(report_form.reason) }}
+            <button type="submit" class="btn danger">신고 접수</button>
+          </form>
+        </details>
+      {% endif %}
+    </div>
+  </article>
+{% endblock %}

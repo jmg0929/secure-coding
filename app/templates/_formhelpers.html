@@ -1,0 +1,15 @@
+{% macro render_field(field, autocomplete='') %}
+  <div class="field">
+    {{ field.label }}
+    {% if autocomplete %}
+      {{ field(autocomplete=autocomplete) }}
+    {% else %}
+      {{ field() }}
+    {% endif %}
+    {% if field.errors %}
+      <ul class="field-errors">
+        {% for e in field.errors %}<li>{{ e }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+{% endmacro %}

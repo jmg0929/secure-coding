@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}전체 채팅 · 중고마켓{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>전체 채팅방</h1>
+    <a class="btn small" href="{{ url_for('chat.inbox') }}">1:1 채팅 목록</a>
+  </div>
+
+  <div class="chat-shell" id="chat">
+    <ul class="messages plain" id="messages"></ul>
+    <form class="chat-form" id="chat-form">
+      <input id="chat-input" type="text" maxlength="1000" placeholder="모두에게 보낼 메시지를 입력하세요" autocomplete="off">
+      <button type="submit">전송</button>
+    </form>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

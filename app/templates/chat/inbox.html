@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}채팅 · 중고마켓{% endblock %}
+
+{% block pills %}
+  <a class="pill on" href="{{ url_for('chat.inbox') }}">💬 1:1 채팅</a>
+  <a class="pill" href="{{ url_for('chat.room') }}">🌐 전체 채팅방</a>
+{% endblock %}
+
+{% block content %}
+  <div class="section-head">
+    <h1>채팅 <span class="num">{{ rooms|length }}</span></h1>
+    <span class="hint">거래 상대와 나눈 대화예요</span>
+  </div>
+
+  {% if rooms %}
+    <ul class="rows">
+      {% for r in rooms %}
+        <li>
+          <a class="row-link compact" href="{{ url_for('chat.dm', peer_id=r['id']) }}">
+            <div class="avatar lg">{{ r['username'][0]|upper }}</div>
+            <div class="row-body">
+              <div class="row-title">{{ r['username'] }}</div>
+              <div class="row-desc">{{ r['last_body'] }}</div>
+            </div>
+            <div class="row-aside slim">
+              <span class="meta-line dim">{{ r['last_at'][5:16] if r['last_at'] else '' }}</span>
+              <span class="btn small">대화 열기</span>
+            </div>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty">
+      <span class="big">💬</span>
+      아직 대화가 없어요.<br>관심있는 상품에서 판매자와 채팅을 시작해보세요!
+    </div>
+  {% endif %}
+{% endblock %}
